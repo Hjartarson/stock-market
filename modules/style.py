@@ -18,3 +18,4 @@ def set_style():
     plt.rc('font', size=14, family='sans-serif',style='normal',weight='normal')
     plt.rc('axes', labelsize=14, titlesize=14,
            titleweight='bold',prop_cycle=(cycler('color',tableau20)))
+    print('Style set')
