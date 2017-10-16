@@ -1,5 +1,7 @@
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import style as style
 import os
 
@@ -64,3 +66,18 @@ def add_measurement(df,x,m,ax,text=False,color='g'):
         ax.text(x_text, y_text, text,ha="center", va="center", color=text_color, bbox=dict(facecolor='white',
                                                                                            ec=color,ls=':'))
     return ax
+
+def feature_importance(xgb,x_var,stock):
+    # Plot feature importance
+    f, ax = plt.subplots(1,1,figsize=(10,16))
+    feature_importance = xgb.feature_importances_
+    # make importances relative to max importance
+    feature_importance = 100.0 * (feature_importance / feature_importance.max())
+    sorted_idx = np.argsort(feature_importance)
+
+    sorted_idx = np.argsort(feature_importance)
+    pos = np.arange(sorted_idx.shape[0]) + .5
+    plt.barh(pos, feature_importance[sorted_idx], align='center')
+    plt.yticks(pos, np.array(x_var)[sorted_idx])
+    plt.xlabel('Relative Importance')
+    plt.title(stock+' | Feature Importance')

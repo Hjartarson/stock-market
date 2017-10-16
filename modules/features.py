@@ -37,6 +37,7 @@ def add_output_variables(df, days=10):
     for day in np.arange(0,days+1):
         df = df.join(df['close'].shift(periods=-day).div(df['open'])
                                  .sub(1).mul(100).rename('y_open_close_days_'+str(day)))
+        df = df.join(df['y_open_close_days_'+str(day)].pipe(to_bin))
 
     return df
 
