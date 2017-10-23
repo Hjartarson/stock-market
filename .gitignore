@@ -1,4 +1,6 @@
 .*
 *.DS_store
+*.pkl
+*.png
 .ipynb_checkpoints/
 */__pycache__/*

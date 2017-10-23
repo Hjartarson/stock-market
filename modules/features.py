@@ -47,8 +47,7 @@ def to_bin(df):
     name = df.name
     df = df.to_frame()
     df[name+'_up'] = df[name]
-
-    mask = df[name] < 0
+    mask = (df[name] < 0)
     df.loc[df[name][mask].index, name+'_up'] = 0
     mask = df[name] > 0
     df.loc[df[name][mask].index, name+'_up'] = 1

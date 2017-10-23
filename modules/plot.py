@@ -69,7 +69,7 @@ def add_measurement(df,x,m,ax,text=False,color='g'):
 
 def feature_importance(xgb,x_var,stock):
     # Plot feature importance
-    f, ax = plt.subplots(1,1,figsize=(10,16))
+    f, ax = plt.subplots(1,1,figsize=(10,24))
     feature_importance = xgb.feature_importances_
     # make importances relative to max importance
     feature_importance = 100.0 * (feature_importance / feature_importance.max())
