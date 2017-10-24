@@ -66,28 +66,26 @@ def xgb_pred(df,x_var):
     for predict_days in np.arange(0, 11):
         predict_variable = 'y_open_close_days_'+str(predict_days)+'_up'
         print(predict_days)
-        print(df[[predict_variable]+x_var].tail(predict_days+1))
+        df_train = df[[predict_variable]+x_var].copy().dropna()
+        df_pred = df[[predict_variable]+x_var].tail(predict_days+1)
+
 
 
     #     df_pred = df[x_var+[predict_variable]].copy()
     #     #df_pred = df_pred.dropna()
     #
-    #     x_train = df_pred[x_var].dropna().values
-    #     x_test = df[x_var].tail(predict_days+1).values
-    #
-    #     y_train = df[predict_variable].tail(predict_days+1).values
-    #     y_test = test[predict_variable].values
+        x_train = df_train[x_var].values
+        y_train = df_train[predict_variable].values
+        x_pred = df_pred[x_var].values
     #
     #     # xgboost
-    #     xgb.fit(x_train, y_train)
-    #     ypred = xgb.predict_proba(x_test)
-    #     score = xgb.score(x_test, y_test)
+        xgb.fit(x_train, y_train)
+        ypred = xgb.predict_proba(x_pred)
     #
     #     # Save prediction
-    #     df = df.join(pd.DataFrame(ypred, columns=['pred_open_close_down_' + str(predict_days),
-    #                                               'pred_open_close_up_' + str(predict_days)],
-    #                               index=test.index))
-    # return df
+        df = df.join(pd.DataFrame(ypred[:,1], columns=['pred_open_close_up_' + str(predict_days)],
+                                  index=df_pred.index))
+    return df
 
 def plot_pred(df,Quote):
     print('plot prediction...')
@@ -176,7 +174,7 @@ def make_pred(argv):
 
     # MAKE PRED
     df = df.pipe(xgb_pred, x_var)
-
+    print(df.tail())
     # PLOT PRED
     #df.pipe(plot_pred,Quote)
 
