@@ -32,10 +32,11 @@ def add_rolling(df):
     return df
 
 def xgb_pred_test(df,x_var):
-    print('make prediction...')
+    print('predicting days...')
     xgb = xgboost.XGBClassifier(max_depth=20, objective='binary:logistic')
 
     for predict_days in np.arange(0, 11):
+        print(predict_days)
         predict_variable = 'y_open_close_days_'+str(predict_days)+'_up'
         df_pred = df[x_var+[predict_variable]].copy()
         df_pred = df_pred.dropna()
@@ -60,7 +61,7 @@ def xgb_pred_test(df,x_var):
     return df
 
 def xgb_pred(df,x_var):
-    print('make prediction...')
+    print('predicting days...')
     xgb = xgboost.XGBClassifier(max_depth=20, objective='binary:logistic')
 
     for predict_days in np.arange(0, 11):
@@ -102,19 +103,38 @@ def plot_pred(df,Quote):
     agg = {predict_variable[:-3]: 'mean',
            'pred_open_close_down_' + str(days): 'count'}
     sell_with_confidence = df_sell.groupby(predict_variable).agg(agg)
-
+    trade_with_conf = buy_with_confidence.join(sell_with_confidence, lsuffix='_buy', rsuffix='_sell')
+    print(trade_with_conf.T)
     f, ax = plt.subplots(1, 1)
     df['close'].plot(ax=ax, title=Quote)
 
     df_buy['close'].plot(ls='', marker="o", ms=8, ax=ax, color='g')
     df_sell['close'].plot(ls='', marker="o", ms=8, ax=ax, color='r')
     ax.grid()
-    filepath = os.path.join(FIG,'prediction.png')
+    filepath = os.path.join(FIG,Quote+'-PRED.png')
     pl.save_fig(f, filepath)
 
     img = Image.open(filepath)
     img.show()
 
+def print_result(df):
+    for days in np.arange(0,11):
+        output_var = 'y_open_close_days_' + str(days) + '_up'
+        pred_var = 'pred_open_close_up_' + str(days)
+        print(df[[output_var, pred_var]].tail(11))
+
+def check_quality(df):
+    # MUST FFILL, ELSE CHEATING
+    print(df.replace(0,np.nan).fillna(method='ffill').info())
+    return df.replace(0,np.nan).fillna(method='ffill')
+
+def plot_raw_data(df, Quote):
+    f, ax = plt.subplots(1, 1)
+    df.plot(ax = ax, secondary_y = 'volume', grid = True, title = Quote)
+    filepath = os.path.join(FIG, Quote + '-RAW.png')
+    pl.save_fig(f, filepath)
+    img = Image.open(filepath)
+    img.show()
 
 def make_pred(argv):
     # OMXS30 Data
@@ -146,7 +166,7 @@ def make_pred(argv):
     # NEW DAY
     period_length = 1
     period = 'd'
-    interval_min = 60
+    interval_min = 2
     interval_sec = 60 * interval_min
     if get_new == 'new':
         df_last_day = stocks.GoogleIntradayQuote(Quote, interval_sec, period_length, period, exchange)
@@ -157,12 +177,22 @@ def make_pred(argv):
     predict_day = df_last_day['datetime'].min().replace(hour=17,minute=30)
     print('Predict day:',predict_day)
 
-    # ADD NEW OPEN PRICE
+
     df = df.groupby('datetime').sum()
+    # CHECK QUALITY
+    df = df.pipe(check_quality)
+    df.pipe(plot_raw_data, Quote)
+
+    # ADD NEW OPEN PRICE
     dft = pd.DataFrame([[open_price, np.nan, np.nan, np.nan, np.nan]],
                        columns=['open','high','low','close','volume'],
                        index=[predict_day])
     df = df.append(dft)
+
+
+
+
+
 
     # ADD FEATURES
     df = df.pipe(add_rolling)
@@ -172,11 +202,16 @@ def make_pred(argv):
     x_var = [x for x in np.unique(df.columns) if 'x_' in x]
     print(x_var)
 
+    # TEST PRED
+    df_test = df.pipe(xgb_pred_test, x_var)
+    df_test.pipe(plot_pred,Quote)
+    y_var = [x for x in np.unique(df.columns) if 'y_' in x]
+    pred_var = [x for x in np.unique(df.columns) if 'pred_' in x]
     # MAKE PRED
     df = df.pipe(xgb_pred, x_var)
-    print(df.tail())
+    #df.pipe(print_result)
     # PLOT PRED
-    #df.pipe(plot_pred,Quote)
+
 
 
 
