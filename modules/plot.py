@@ -81,3 +81,56 @@ def feature_importance(xgb,x_var,stock):
     plt.yticks(pos, np.array(x_var)[sorted_idx])
     plt.xlabel('Relative Importance')
     plt.title(stock+' | Feature Importance')
+
+def normalize_df(df,scale):
+    #df_norm = (df-df.min().min())/(df-df.min().min()).max()  #All numbers 0-1
+    df_norm = (df-0.5)*scale+0.5
+    return df_norm
+
+def render_mpl_table(data, ax, info='None', **kwargs):
+    cmap=plt.get_cmap('RdYlGn')
+    cmap.set_under('white')
+    data_norm = data.pipe(normalize_df, 0.8)
+
+    data = data.reset_index()
+    data_norm = data_norm.reset_index()
+    ax.grid(False)
+    ax.axis('off')
+    bbox = [0, 0, 1, 1]  # Table full screen
+    mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns,
+                         cellLoc='center', **kwargs)
+
+    mpl_table.auto_set_font_size(False)
+    mpl_table.set_fontsize(16)
+    row_label_height = 0.05
+    cell_width = 0.055
+    col_label_width = 0.4
+    table_props = mpl_table.properties()
+    table_cells = table_props['celld']
+    cell_game = (-1, -1)
+    cell_kpi = (-1, -1)
+    for k, cell in sorted(table_cells.items()):
+        cell_text = cell.get_text().get_text()
+        #cell.set_edgecolor('black')
+        #cell.set_facecolor('black')
+        if k[0] == 0 and k[1] == 0:
+            cell.set_text_props(fontsize=20, weight='bold', alpha=0.5)
+            cell._text.set_text(info)
+            cell.set_width(col_label_width)
+            cell.set_height(row_label_height)
+        elif k[1] == 0:  # HEADER COLUMN (gamename)
+            cell.set_text_props(weight='bold', fontsize=17)
+            cell.set_width(col_label_width)
+            cell.set_linewidth(2)
+        elif k[0] == 0:  # HEADER ROW (KPI)
+            cell.set_height(row_label_height)
+            cell.set_width(cell_width)
+            cell.set_text_props(weight='normal', color='w', rotation=60, fontsize=16)
+        else:  # Cells
+            cell._text.set_text(cell_text[:4])
+            cell.set_width(cell_width)
+            #cell.set_text_props(color='black')
+            cell.set_facecolor(cmap(data_norm.values[k[0] - 1, k[1]]))
+            if cell_text == 'nan':
+                cell.set_text_props(color='white')
+    return mpl_table
