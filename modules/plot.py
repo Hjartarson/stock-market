@@ -92,6 +92,7 @@ def render_mpl_table(data, ax, info='None', **kwargs):
     cmap.set_under('white')
     data_norm = data.pipe(normalize_df, 0.8)
 
+    data.index = data.index.date
     data = data.reset_index()
     data_norm = data_norm.reset_index()
     ax.grid(False)
@@ -118,7 +119,7 @@ def render_mpl_table(data, ax, info='None', **kwargs):
             cell._text.set_text(info)
             cell.set_width(col_label_width)
             cell.set_height(row_label_height)
-        elif k[1] == 0:  # HEADER COLUMN (gamename)
+        elif k[1] == 0:  # HEADER COLUMN (date)
             cell.set_text_props(weight='bold', fontsize=17)
             cell.set_width(col_label_width)
             cell.set_linewidth(2)

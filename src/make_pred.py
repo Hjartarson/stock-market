@@ -2,15 +2,15 @@
 
 
 import pandas as pd
-import datetime
+from datetime import datetime, time
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 import os
 import xgboost
 import sys
-today = str(datetime.datetime.now().date())
-print(today)
+now = datetime.now()
+print(now)
 
 
 
@@ -32,13 +32,12 @@ class MakePrediction:
 
     def check_quality(self, df):
         # MUST FFILL, ELSE CHEATING
-        print(df.replace(0,np.nan).fillna(method='ffill').info())
+        print('\n',df.replace(0,np.nan).fillna(method='ffill').info())
         return df.replace(0,np.nan).fillna(method='ffill')
 
     def get_data(self, get_new, info, Quote, interval_sec, period_length, period, exchange):
         if get_new == 'new':
             df = stocks.GoogleIntradayQuote(Quote, interval_sec, period_length, period, exchange)
-            print(df.head())
             df.to_pickle(os.path.join(DATA,Quote+info+'.pkl'))
         else:
             df = pd.read_pickle(os.path.join(DATA,Quote+info+'.pkl'))
@@ -69,18 +68,12 @@ class MakePrediction:
         from_date = str(df['datetime'].min().date())
         to_date = str(df['datetime'].max().date())
         days = np.busday_count(from_date, to_date) + 1
-        print('ticks:', df.shape[0])
-        print('from:', from_date)
-        print('to:', to_date)
-        print('days:', days)
+        print('ticks:\t', df.shape[0])
+        print('from:\t', from_date)
+        print('to:\t', to_date)
+        print('days:\t', days)
 
-        # NEW DAY
-        period_length = 1; period = 'd'; interval_min = 2; interval_sec = 60 * interval_min
-        df_last_day = self.get_data(get_new, '-TODAY', Quote, interval_sec, period_length, period, exchange)
 
-        open_price = df_last_day[df_last_day['datetime']==df_last_day['datetime'].min()]['open'].values[0]
-        predict_day = df_last_day['datetime'].min().replace(hour=17,minute=30)
-        print('Predict day:',predict_day)
 
 
         df = df.groupby('datetime').sum()
@@ -88,11 +81,21 @@ class MakePrediction:
         df = df.pipe(self.check_quality)
         df.pipe(visuals.plot_raw_data, Quote)
 
-        # ADD NEW OPEN PRICE
-        dft = pd.DataFrame([[open_price, np.nan, np.nan, np.nan, np.nan]],
-                           columns=['open','high','low','close','volume'],
-                           index=[predict_day])
-        df = df.append(dft)
+        # NEW DAY IF MARKET OPEN
+        if now.time() > time(9,00):
+            period_length = 1;
+            period = 'd';
+            interval_min = 2;
+            interval_sec = 60 * interval_min
+            df_last_day = self.get_data(get_new, '-TODAY', Quote, interval_sec, period_length, period, exchange)
+            open_price = df_last_day[df_last_day['datetime'] == df_last_day['datetime'].min()]['open'].values[0]
+            predict_day = df_last_day['datetime'].min().replace(hour=17, minute=30)
+            print('Predict day:', predict_day)
+            # ADD NEW OPEN PRICE
+            dft = pd.DataFrame([[open_price, np.nan, np.nan, np.nan, np.nan]],
+                               columns=['open','high','low','close','volume'],
+                               index=[predict_day])
+            df = df.append(dft)
 
 
         # ADD FEATURES
