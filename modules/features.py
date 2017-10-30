@@ -23,8 +23,16 @@ def add_input_variables(df,days=10):
                                  .sub(1).mul(100).rename('x_low_high_day_'+str(day)))
     return df
 
+def shift_columns(df, columns, days=10):
+    for day in np.arange(1, days + 1):
+        new_col_nammes = [s + '_'+str(day) for s in columns]
+        df_new = df[columns].shift(periods=day)
+        df_new.columns = new_col_nammes
+        df = df.join(df_new)
+    return df
 
-def add_output_variables(df, days=10):
+
+def add_outcome(df, days=10):
     #PREDICTORS, SHIFT BOTH BACK IN TIME, SEE IN FUTURE
     #GAP FIRST DAY EXCLUDED SINCE CLOSE PRICE INCLUDED IN X (NO TIME TO TRADE)
     # close.shift(-1)/open.shift(1) = NEXT DAY OUTCOME

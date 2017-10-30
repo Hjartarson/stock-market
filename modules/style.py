@@ -6,9 +6,10 @@ def set_style():
     plt.rc('legend', frameon=True,fancybox=True,fontsize=14)
     plt.rc('xtick', labelsize=12)
     plt.rc('ytick', labelsize=12)
+    plt.rc('lines', linewidth=0.5)
     plt.rc('grid', linestyle="--", color='grey',alpha = 0.2)
     plt.rc('font', size=14, family='sans-serif',style='normal',weight='normal')
-    plt.rc('axes', labelsize=14, titlesize=14,
+    plt.rc('axes', labelsize=14, titlesize=14,linewidth=0,
            titleweight='bold',prop_cycle=(cycler('color',tableau20)))
     plt.rc('figure', figsize=(14, 8), titlesize=16)
     print('Style set')
