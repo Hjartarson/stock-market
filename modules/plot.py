@@ -6,8 +6,6 @@ import numpy as np
 import style as style
 import os
 
-
-
 def color_quantiles(ax,x_width,y_width):
     tableau = style.get_tableau()
     for nr, x, y in zip([0, 1, 2, 3], [-x_width, -x_width, 0, 0], [0, -y_width, 0, -y_width]):
@@ -68,9 +66,9 @@ def add_measurement(df,x,m,ax,text=False,color='g'):
                                                                                            ec=color,ls=':'))
     return ax
 
-def feature_importance(xgb,x_var,stock):
+def feature_importance(xgb,x_var,stock, figsize):
     # Plot feature importance
-    f, ax = plt.subplots(1,1,figsize=(10,24))
+    f, ax = plt.subplots(1,1,figsize=figsize)
     feature_importance = xgb.feature_importances_
     # make importances relative to max importance
     feature_importance = 100.0 * (feature_importance / feature_importance.max())

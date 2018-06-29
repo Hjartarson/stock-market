@@ -1,6 +1,6 @@
 import numpy as np
 
-def add_input_variables(df,days=10):
+def add_x_days_change(df,days=10):
     # TODAY YOU ONLY KNOW OPEN!!
     # Everything has to be shifted (positive shifted) except open.
 
@@ -26,7 +26,7 @@ def add_input_variables(df,days=10):
 def shift_columns(df, columns, days=10):
     for day in np.arange(1, days + 1):
         new_col_nammes = [s + '_'+str(day) for s in columns]
-        df_new = df[columns].shift(periods=day)
+        df_new = df[columns].copy().shift(periods=day)
         df_new.columns = new_col_nammes
         df = df.join(df_new)
     return df
@@ -49,14 +49,20 @@ def add_outcome(df, days=10):
 
     return df
 
+def add_rolling(df):
+    for days_rolling in [3,5,10,20,30,40,50,60,100]:
+        df = df.join(df['open'].rolling(days_rolling).mean().rename('x_open_rolling_'+str(days_rolling)))
+    for days_rolling in [10, 20]:
+        df = df.join(df['x_volume'].rolling(days_rolling).mean().rename('x_volume_rolling_' + str(days_rolling)))
+    return df
 
 def to_bin(df):
     # ADD CAT INSTEAD OF FLOAT
     name = df.name
     df = df.to_frame()
-    df[name+'_up'] = df[name]
-    mask = (df[name] < 0)
-    df.loc[df[name][mask].index, name+'_up'] = 0
+    df[name+'_up'] = 0
+    mask = (df[name] <= 0)
+    df.loc[df[name][mask].index, name+'_up'] = -1
     mask = df[name] > 0
     df.loc[df[name][mask].index, name+'_up'] = 1
     return df[name+'_up']
