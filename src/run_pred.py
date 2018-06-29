@@ -3,22 +3,41 @@ import os
 from datetime import datetime
 now = datetime.now()
 
-OMX30 = ['SKA-B','HM-B']
-OMX30 = ['SKA-B','HM-B','NDA-SEK','ERIC-B','TELIA','ALIV-SDB','NCC-B','LUMI-SDB','THULE','BOL','GETI-B','AZN',
-         'MTG-B', 'SAND','ALFA','ASSA-B','ATCO-B','INVE-B','KINV-B','SCA-B','TEL2-B','SKF-B']
-OMX30 = ['ERIC-B']
-#OMX30 = ['NDA-SEK']
-#EXCHANGE = 'INDEXNASDAQ'
-#STO = 'OMXS30'
-EXCHANGE = 'STO'
-
 from make_pred import MakePrediction
 import os
 
-def run_pred():
+def get_quotes(what):
+    if what == 'OMX30':
+        EXCHANGE = 'STO'
+        QUOTES = ['ALFA','ATCO-B','ALIV-SDB','AZN','ASSA-B',
+                  'BOL',
+                  'ERIC-B','ELUX-B',
+                  'GETI-B',
+                  'HM-B',
+                  'INVE-B',
+                  'KINV-B',
+                  'LUMI-SDB','LUPE',
+                  'MTG-B',
+                  'NDA-SEK','NCC-B','NOKIA-SEK',
+                  'SKA-B','SAND','SCA-B','SKF-B','SEB-C','SECU-B','SSAB-B','SWED-A','SWMA',
+                  'TELIA','THULE','TEL2-B',
+                  'VOLV-B']
+
+    elif what == 'FOREX':
+        EXCHANGE = 'CURRENCY'
+        QUOTES = ['EURUSD','EURSEK','EURGBP']
+
+    elif what == 'INDEX':
+        EXCHANGE = 'INDEXNASDAQ'
+        QUOTES = 'OMXS30'
+    return QUOTES, EXCHANGE
+
+
+def run_pred(what):
     mp = MakePrediction()
+    QUOTES, EXCHANGE = get_quotes(what)
     fail_quote = []
-    for quote in OMX30:
+    for quote in QUOTES:
         print([quote, EXCHANGE, 'new'])
         last_date, pred = mp.make_pred([quote,EXCHANGE, 'new'])
         pred = pred.stack().round(2)
@@ -44,4 +63,4 @@ def summarize_pred():
 
 
 if __name__ == '__main__':
-    run_pred()
+    run_pred(sys.argv[1])

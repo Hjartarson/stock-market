@@ -98,6 +98,12 @@ class MakePrediction:
         print('to:\t', to_date)
         print('days:\t', days)
 
+        if exchange == 'CURRENCY':
+            df['open'] = df['close']
+            df['high'] = df['close']
+            df['low'] = df['close']
+            df['volume'] = 1
+
         # ADD FEATURES
         df['x_volume'] = df['volume'].shift(1).copy()
         df = df.pipe(features.add_rolling)
@@ -108,7 +114,6 @@ class MakePrediction:
 
         # ADD OUTPUT
         df = df.pipe(feat.add_outcome, days=10)
-
         # TEST/PLOT PRED
         df.pipe(ml.xgb_pred_test, x_var).pipe(visuals.plot_pred,Quote)
 
@@ -218,20 +223,21 @@ class Visuals:
             try:
                 df_buy['close'].plot(ls='', marker="o", ms=8, ax=ax, color='g')
                 df_sell['close'].plot(ls='', marker="o", ms=8, ax=ax, color='r')
+                plt.table(cellText=trade_with_conf.values, colWidths=[0.25] * len(trade_with_conf.columns),
+                          rowLabels=trade_with_conf.index,
+                          colLabels=trade_with_conf.columns,
+                          cellLoc='center', rowLoc='center',
+                          loc='bottom')
+                ax.grid()
+                #ax.xlabel('')
+                filepath = os.path.join(os.path.join(FIG,Quote),str(days)+'_days_pred.png')
+                pl.save_fig(f, filepath)
+                plt.close('all')
+                #img = Image.open(filepath)
+                #img.show()
             except:
                 print('No numeric data to plot\n')
-            plt.table(cellText=trade_with_conf.values, colWidths=[0.25] * len(trade_with_conf.columns),
-                      rowLabels=trade_with_conf.index,
-                      colLabels=trade_with_conf.columns,
-                      cellLoc='center', rowLoc='center',
-                      loc='bottom')
-            ax.grid()
-            #ax.xlabel('')
-            filepath = os.path.join(os.path.join(FIG,Quote),str(days)+'_days_pred.png')
-            pl.save_fig(f, filepath)
-            plt.close('all')
-            #img = Image.open(filepath)
-            #img.show()
+
 
     def plot_data(self, df, Quote):
         f, ax = plt.subplots(1, 1)
