@@ -22,11 +22,13 @@ ROOT = os.sep.join(path_components[:path_components.index("analyses")])
 
 sys.path.append(os.path.join(ROOT, 'modules'))
 
+import autoencoder as aencode
 
 def make_report():
     print('making report')
     df = pd.read_pickle(os.path.join(DATA_RAW, 'df.pkl'), compression = 'gzip')
     print(df.head())
+    ae = aencode.AutoEncoder()
 
 if __name__ == '__main__':
     make_report()
