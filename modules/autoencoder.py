@@ -1,14 +1,17 @@
 
+import numpy as np
 import tensorflow as tf
 print('tensorflow version:', tf.__version__)
 
 class AutoEncoder:
-    epochs = 20
+    epochs = 60
     learning_rate = 0.001
     encoder = None
     sess = None
+    days = None
 
     def __init__(self, shape=None):
+        self.days = shape
         self.inputs_ = tf.placeholder(dtype=tf.float32, shape=(None, shape, 1), name="input")
         self.targets_ = tf.placeholder(dtype=tf.float32, shape=(None, shape, 1), name="target")
 
@@ -35,7 +38,7 @@ class AutoEncoder:
     def decoder(self):
         ### Decoder
         dec_layer1 = tf.image.resize_images(self.encoder,
-                                            size=(1 ,224),
+                                            size=(1 ,self.days),
                                             method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
         print(dec_layer1.get_shape())
         dec_layer2 = tf.layers.conv1d(dec_layer1,
@@ -56,7 +59,7 @@ class AutoEncoder:
         decoded = tf.nn.sigmoid(logits)
         print(decoded.get_shape())
 
-    def train(self, df_player):
+    def train(self, df_stocks):
         """
         Train model
         """
@@ -74,16 +77,16 @@ class AutoEncoder:
         # sess.partial_run
         self.sess.run(tf.global_variables_initializer())
         for e in range(self.epochs):
-            batch_cost, _ = self.sess.run([cost, opt], feed_dict={self.inputs_: df_player.values.reshape((-1, 224, 1)),
-                                                                  self.targets_: df_player.values.reshape
-                                                                      ((-1, 224, 1))})
+            batch_cost, _ = self.sess.run([cost, opt], feed_dict={self.inputs_: df_stocks.values.reshape((-1, self.days, 1)),
+                                                                  self.targets_: df_stocks.values.reshape
+                                                                      ((-1, self.days, 1))})
             if e% 10 == 0:
                 print("Epoch: {}/{}...".format(e + 1, self.epochs),
                       "Training loss: {:.4f}".format(batch_cost))
 
-    def encode(self, df_player):
+    def encode(self, df_stocks):
         """
         encode
         """
-        encoded = self.sess.run(self.encoder, feed_dict={self.inputs_: df_player.values.reshape((-1, 224, 1))})
-        return np.reshape(encoded, (self.encoder.get_shape()[1] * self.encoder.get_shape()[2], -1))
+        encoded = self.sess.run(self.encoder, feed_dict={self.inputs_: df_stocks.values.reshape((-1, self.days, 1))})
+        return np.reshape(encoded, (-1, self.encoder.get_shape()[1] * self.encoder.get_shape()[2]))
