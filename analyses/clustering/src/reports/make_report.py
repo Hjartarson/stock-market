@@ -23,8 +23,10 @@ ROOT = os.sep.join(path_components[:path_components.index("analyses")])
 
 sys.path.append(os.path.join(ROOT, 'modules'))
 
-import autoencoder as aencode
+import autoencoder as ae
 import clustering as cl
+import style as st
+st.set_style()
 
 def make_report():
     print('making report')
@@ -33,24 +35,30 @@ def make_report():
     df_stock = df.groupby(['datetime', 'stock'])['close'].sum().unstack().ffill().bfill()
     df_stock = (df_stock - df_stock.min()) / (df_stock.max() - df_stock.min())
     df_stock = df_stock.T
-    print(df.head())
-    days, stocks = df_stock.shape
+    print(df_stock.head())
+    stocks, days = df_stock.shape
+    print('days:', days, 'stocks:', stocks)
 
-    # AutoEncoder
-    ae = aencode.AutoEncoder(stocks)
-    ae.train(df_stock)
-    features = ae.encode(df_stock)
+    #AUTOENCODER
+    AE = ae.AutoEncoder(shape = days)
+    conv_layers = {'conv1': {'filters': 8, 'kernel_size': 7, 'strides': 1},
+                   'conv2': {'filters': 8, 'kernel_size': 4, 'strides': 1}}
+    pool_layers = {'pool1': {'pool_size': 7, 'strides': 7},
+                   'pool2': {'pool_size': 4, 'strides': 4}}
+    AE.train(df_stock, conv_layers, pool_layers)
+    features = AE.encode(df_stock)
     print('samples:', np.shape(features)[0], 'features:', np.shape(features)[1])
 
     # Cluster
     CLUSTERS = 20
     CL = cl.Clustering(points=features, num_clusters=CLUSTERS)
     CL.train()
-    #print(len(CL.predict()))
+    print(len(CL.predict()))
+    print(df_stock.shape)#"['cluster'] = CL.predict()
     df_stock['cluster'] = CL.predict()
 
     for cluster in range(CLUSTERS):
-        f, ax = plt.subplots()
+        f, ax = st.create_axis()
         print('cluster:', cluster)
         df_cluster = df_stock[df_stock['cluster'] == cluster]
         columns = df_cluster.columns[df_cluster.columns != 'cluster']
@@ -60,7 +68,8 @@ def make_report():
         if df_cluster.empty:
             print('no stock in cluster')
         else:
-            df_cluster.plot(ax=ax, legend=False)
+            df_cluster.plot(ax=ax, legend=True)
+            ax = st.fix_legend(ax)
             path = os.path.join(FIGS, 'cluster_'+str(cluster)+'.png')
             f.savefig(path, dpi=200, bbox_inches='tight')
 

@@ -25,3 +25,25 @@ def get_tableau():
         tableau20[i] = (r / 255., g / 255., b / 255.)
 
     return tableau20
+
+
+def create_axis(figures = (1,1)):
+    # Such function is used by the following projects:
+    #      \bids-analysis-platform\analyses\monthly-report\smt-report
+    #       \bids-analysis-platform\analyses\freerounds\acquisition
+    slide_width = 25.4
+    slide_height = 15
+    f, ax = plt.subplots(figures[0], figures[1], sharex=False, figsize=(slide_width, slide_height))
+    return f, ax
+
+
+def fix_legend(ax,cols=4,handles='none',labels='none'):
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.2,
+                     box.width, box.height * 0.8])
+    if handles == 'none':
+        handles, labels = ax.get_legend_handles_labels()
+    # Put a legend below current axis
+    ax.legend(handles=handles,labels=labels,loc='upper center', bbox_to_anchor=(0.5, -0.08),
+              fancybox=True, ncol=cols)
+    return ax
