@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 from cycler import cycler
+import pandas as pd
 
 def set_style():
     tableau20 = get_tableau()
     plt.rc('legend', frameon=True,fancybox=True,fontsize=14)
     plt.rc('xtick', labelsize=12)
     plt.rc('ytick', labelsize=12)
-    plt.rc('lines', linewidth=0.5)
+    plt.rc('lines', linewidth=1)
     plt.rc('grid', linestyle="--", color='grey',alpha = 0.2)
     plt.rc('font', size=14, family='sans-serif',style='normal',weight='normal')
     plt.rc('axes', labelsize=14, titlesize=14,linewidth=0,
@@ -31,8 +32,8 @@ def create_axis(figures = (1,1)):
     # Such function is used by the following projects:
     #      \bids-analysis-platform\analyses\monthly-report\smt-report
     #       \bids-analysis-platform\analyses\freerounds\acquisition
-    slide_width = 25.4
-    slide_height = 15
+    slide_width = 15
+    slide_height = 10
     f, ax = plt.subplots(figures[0], figures[1], sharex=False, figsize=(slide_width, slide_height))
     return f, ax
 
@@ -46,4 +47,18 @@ def fix_legend(ax,cols=4,handles='none',labels='none'):
     # Put a legend below current axis
     ax.legend(handles=handles,labels=labels,loc='upper center', bbox_to_anchor=(0.5, -0.08),
               fancybox=True, ncol=cols)
+    return ax
+
+def set_month_xticks(df_date,ax,rot=0):
+    major_ticks = pd.to_datetime((df_date + pd.tseries.offsets.MonthBegin()).unique())
+    major_tick_labels = list(map(lambda x: x.strftime('%b'), major_ticks))
+
+    minor_ticks = list(filter(lambda x: x.month == 1, major_ticks))
+    minor_tick_labels = list(map(lambda x: x.year, minor_ticks))
+
+    ax.set_xticks(major_ticks, minor=False)
+    ax.set_xticks(minor_ticks, minor=True)
+    ax.set_xticklabels(major_tick_labels, minor=False, rotation=rot, ha='right',y=-0.03)
+    ax.set_xticklabels(minor_tick_labels, minor=True, rotation=0, ha='right', weight='bold',alpha=1)
+    ax.set_xlabel('')
     return ax

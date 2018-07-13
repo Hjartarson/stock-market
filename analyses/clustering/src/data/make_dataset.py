@@ -39,7 +39,7 @@ def make_dataset():
         df_all = pd.DataFrame()
 
     interval = '1d'
-    period = '1Y'
+    period = '2Y'
 
     today = dt.datetime.today()
     then = (today-pd.DateOffset(years=1))

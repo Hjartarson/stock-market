@@ -5,7 +5,7 @@ print('tensorflow version:', tf.__version__)
 
 
 class AutoEncoder:
-    epochs = 20
+    epochs = 100
     learning_rate = 0.001
     encoder = None
     sess = None
