@@ -32,7 +32,7 @@ class AutoEncoder:
                                          padding='same',
                                          activation=tf.nn.relu,
                                          name=conv)
-            enc_layer = tf.layers.max_pooling1d(enc_layer,
+            enc_layer = tf.layers.average_pooling1d(enc_layer,
                                                 pool_size=pool_layers[pool]['pool_size'],
                                                 strides=pool_layers[pool]['strides'],
                                                 padding='same')
@@ -91,6 +91,10 @@ class AutoEncoder:
             if e % 10 == 0:
                 print("Epoch: {}/{}...".format(e + 1, self.epochs),
                       "Training loss: {:.4f}".format(batch_cost))
+
+        kernels = (tf.global_variables()[0].eval(self.sess))
+        print(tf.global_variables())
+        return kernels
 
     def encode(self, df_player):
         """
